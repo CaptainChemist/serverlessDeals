@@ -1,0 +1,4 @@
+node_modules/
+.serverless/
+.webpack/
+.DS_STORE
