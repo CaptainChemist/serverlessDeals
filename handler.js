@@ -24,12 +24,12 @@ const typeDefs = `
     id: String,
     name: String,
     term: Float,
-    deal: DealType,
+    deal: DealType
   }
 
   type UserType {
     role: String,
-    id: String,
+    id: String
   }
 
   type Query {
@@ -39,19 +39,20 @@ const typeDefs = `
     contract(id: String): ContractType,
     contractByName(name: String, dealName: String): ContractType,
     contracts(dealId: String): [ContractType],
-    hello(name: String): String!
+    hello(name: String): String!,
+    me: UserType
   }
 
   type Mutation {
     createDeal(
       name: String,
-      address: String,
+      address: String
     ): DealType,
     createContract(
       term: Float,
       name: String,
-      deal: String,
-    ): ContractType,
+      deal: String
+    ): ContractType
   }
 `;
 

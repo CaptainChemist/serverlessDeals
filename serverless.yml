@@ -19,9 +19,9 @@ provider:
         - "arn:aws:dynamodb:us-east-1:*"
   environment:
     CONTENT_TABLE: ${self:service}-${self:provider.stage}-content
-    AUDIENCE: https://uun67iqqi1.execute-api.us-east-1.amazonaws.com/dev/
-    JWKS_URI: https://pocket-scholar.auth0.com/.well-known/jwks.json
-    TOKEN_ISSUER: https://pocket-scholar.auth0.com/
+    AUDIENCE: https://example.execute-api.us-east-1.amazonaws.com/dev/
+    JWKS_URI: https://example.auth0.com/.well-known/jwks.json
+    TOKEN_ISSUER: https://example.auth0.com/
     deal: deal
     contract: contract
 
@@ -46,8 +46,3 @@ functions:
         cors: true
 custom:
   webpackIncludeModules: true
-  dynamodb:
-    start:
-      port: 8000
-      inMemory: true
-      migrate: true

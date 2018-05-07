@@ -5,7 +5,9 @@
 function (user, context, callback) {
 
   if('type' in user.app_metadata) {
-    context.accessToken['https://www.example.com/userType']=user.app_metadata.type || "FREE";
+    context.accessToken['https://www.example.com/userType']=user.app_metadata.type;
+  } else {
+    context.accessToken['https://www.example.com/userType']=user.app_metadata.type;
   }
 
   callback(null, user, context);
