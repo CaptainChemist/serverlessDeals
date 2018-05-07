@@ -1,0 +1,48 @@
+
+service: serverless-deals
+
+plugins:
+  - serverless-offline
+  - serverless-webpack
+  - serverless-dynamodb-local
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+  region: us-east-1
+  stage: dev
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:*"
+      Resource:
+        - "arn:aws:dynamodb:us-east-1:*"
+  environment:
+    CONTENT_TABLE: ${self:service}-${self:provider.stage}-content
+    AUDIENCE: https://example.execute-api.us-east-1.amazonaws.com/dev/
+    JWKS_URI: https://example.auth0.com/.well-known/jwks.json
+    TOKEN_ISSUER: https://example.auth0.com/
+    deal: deal
+    contract: contract
+
+resources:
+  Resources:
+    Contents: ${file(resources/contents.yml)}
+
+functions:
+  graphql:
+    handler: handler.server
+    events:
+    - http:
+        path: /
+        method: post
+        cors: true
+  playground:
+    handler: handler.playground
+    events:
+    - http:
+        path: /
+        method: get
+        cors: true
+custom:
+  webpackIncludeModules: true
