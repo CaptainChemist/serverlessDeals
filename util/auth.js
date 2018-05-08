@@ -12,7 +12,16 @@ const jwks = jwksClient({
 export const verifyToken = idToken =>
   new Promise((resolve, reject) => {
     try {
-      const { header, payload } = jwt.decode(idToken, { complete: true });
+      if (_.isUndefined(idToken)) {
+        return resolve({});
+      }
+
+      const parsedToken = idToken.split(' ')[1];
+      if (parsedToken === '') {
+        return resolve({});
+      }
+      const { header, payload } = jwt.decode(parsedToken, { complete: true });
+
       if (!header || !header.kid || !payload) {
         reject(new Error('Invalid token.'));
       }
@@ -20,25 +29,23 @@ export const verifyToken = idToken =>
         if (fetchError) {
           reject(new Error(`Error getting signing key: ${fetchError.message}`));
         }
+
         return jwt.verify(
-          idToken,
+          parsedToken,
           key.publicKey,
           { algorithms: ['RS256'] },
           (verificationError, decoded) => {
             if (verificationError) {
-              reject(new Error(`Verification error: ${verificationError.message}`));
+              reject(new Error(`Verification error: ${verificationError.message}.`));
             }
             resolve(decoded);
           }
         );
       });
     } catch (e) {
-      reject(new Error('Bad Token'));
+      reject(new Error('Bad Token.'));
     }
-  }).catch(error =>
-    // console.log(error); //You might need to add logic here to detect if there is no token or a bad token
-    // bad /old tokens should throw an error while no token should be allowed in
-    ({}));
+  });
 
 export const formatAuth0User = auth0User => {
   if (_.isEmpty(auth0User)) {
