@@ -9,9 +9,11 @@ const jwks = jwksClient({
   jwksUri: process.env.JWKS_URI
 });
 
-export const verifyToken = idToken =>
+export const verifyToken = (idToken, context) =>
   new Promise((resolve, reject) => {
     try {
+      console.log('context');
+      console.log(context);
       if (_.isUndefined(idToken)) {
         return resolve({});
       }
@@ -23,11 +25,11 @@ export const verifyToken = idToken =>
       const { header, payload } = jwt.decode(parsedToken, { complete: true });
 
       if (!header || !header.kid || !payload) {
-        reject(new Error('Invalid token.'));
+        reject('Invalid token.');
       }
       jwks.getSigningKey(header.kid, (fetchError, key) => {
         if (fetchError) {
-          reject(new Error(`Error getting signing key: ${fetchError.message}`));
+          reject('Unauthorized');
         }
 
         return jwt.verify(
@@ -36,14 +38,14 @@ export const verifyToken = idToken =>
           { algorithms: ['RS256'] },
           (verificationError, decoded) => {
             if (verificationError) {
-              reject(new Error(`Verification error: ${verificationError.message}.`));
+              reject('Verification error')
             }
             resolve(decoded);
           }
         );
       });
     } catch (e) {
-      reject(new Error('Bad Token.'));
+      reject('Bad Token');
     }
   });
 
@@ -53,11 +55,10 @@ export const formatAuth0User = auth0User => {
   }
   return {
     role: auth0User['https://www.example.com/userType'],
-    id: auth0User.sub
+    id: auth0User.sub,
   };
 };
 
-export const authenticate = async idToken => {
-  const auth0User = await verifyToken(idToken);
-  return formatAuth0User(auth0User);
-};
+export const authenticate = (idToken, context) =>
+  verifyToken(idToken, context)
+    .then(auth0User => formatAuth0User(auth0User))
