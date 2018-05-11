@@ -59,12 +59,16 @@ const typeDefs = `
 // This is the main server object. There is essentially express going on under the hood
 const lambda = new GraphQLServerLambda({
   typeDefs,
-  context: async ({ event }) => {
-    // You have access to context in all queries and mutations so stick important stuff here
-    const user = await authenticate(event.headers.Authorization);
-    // user will either be a UserType or an empty object
-    return { db: dbModel, user };
-  },
+  context: ({ event, context }) =>
+    authenticate(event.headers.Authorization, context)
+      .then(user => ({
+        db: mainDb,
+        user
+      }))
+      .catch(e => {
+        console.log('in outer');
+         throw new Error('Unauthorized');
+      }),
   resolvers: {
     // query and mutation resolvers fetch data and resolve first and then based on the return type
     // these custom types such as DealType, will resolve after the base resolution to fill in
