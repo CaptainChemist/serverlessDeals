@@ -4,6 +4,7 @@ import queries from './queries';
 import mutations from './mutations';
 import { constructIds } from './util/idManipulation';
 import { authenticate } from './util/auth';
+import formatError from './util/errors';
 
 const { deal, contract } = process.env; // retrieve all environmental varas in serverless.yml
 
@@ -60,13 +61,13 @@ const typeDefs = `
 const lambda = new GraphQLServerLambda({
   typeDefs,
   context: ({ event, context }) =>
-    authenticate(event.headers.Authorization, context) 
-      .then(user => ({ 
-        db: mainDb, 
-        user 
-      })) 
-      .catch(e => { 
-        throw new Error('[401] Unauthorized'); 
+    authenticate(event.headers.Authorization, context)
+      .then(user => ({
+        db: dbModel,
+        user
+      }))
+      .catch(e => {
+        throw new Error('[401] Unauthorized');
       }),
   resolvers: {
     // query and mutation resolvers fetch data and resolve first and then based on the return type
@@ -100,19 +101,7 @@ const lambda = new GraphQLServerLambda({
   }
 });
 
-exports.server = (event, context, callback) => { 
-  const modifiedCallback = (error, output) => { 
-    if (output.body.includes('401')) { 
-      callback(null, { 
-        statusCode: 401, 
-        headers: { 'Content-Type': 'application/javascript' }, 
-        body: JSON.stringify({ message: 'Unauthorized' }) 
-      }); 
-    } else { 
-      callback(error, output); 
-    } 
-  }; 
-  return lambda.graphqlHandler(event, context, modifiedCallback); 
-}; 
+exports.server = (event, context, callback) =>
+  lambda.graphqlHandler(event, context, (error, output) => callback(error, formatError(output)));
 
 exports.playground = lambda.playgroundHandler;
