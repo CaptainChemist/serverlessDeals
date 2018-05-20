@@ -60,14 +60,13 @@ const typeDefs = `
 const lambda = new GraphQLServerLambda({
   typeDefs,
   context: ({ event, context }) =>
-    authenticate(event.headers.Authorization, context)
-      .then(user => ({
-        db: mainDb,
-        user
-      }))
-      .catch(e => {
-        console.log('in outer');
-         throw new Error('Unauthorized');
+    authenticate(event.headers.Authorization, context) 
+      .then(user => ({ 
+        db: mainDb, 
+        user 
+      })) 
+      .catch(e => { 
+        throw new Error('[401] Unauthorized'); 
       }),
   resolvers: {
     // query and mutation resolvers fetch data and resolve first and then based on the return type
@@ -101,5 +100,19 @@ const lambda = new GraphQLServerLambda({
   }
 });
 
-exports.server = lambda.graphqlHandler;
+exports.server = (event, context, callback) => { 
+  const modifiedCallback = (error, output) => { 
+    if (output.body.includes('401')) { 
+      callback(null, { 
+        statusCode: 401, 
+        headers: { 'Content-Type': 'application/javascript' }, 
+        body: JSON.stringify({ message: 'Unauthorized' }) 
+      }); 
+    } else { 
+      callback(error, output); 
+    } 
+  }; 
+  return lambda.graphqlHandler(event, context, modifiedCallback); 
+}; 
+
 exports.playground = lambda.playgroundHandler;
