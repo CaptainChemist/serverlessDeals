@@ -5,6 +5,9 @@ import mutations from './mutations';
 import { constructIds } from './util/idManipulation';
 import { authenticate } from './util/auth';
 
+const awsXRay = require('aws-xray-sdk');
+const awsSdk = awsXRay.captureAWS(require('aws-sdk'));
+
 const { deal, contract } = process.env; // retrieve all environmental varas in serverless.yml
 
 // This contains all the type definitions for the models used
@@ -97,5 +100,17 @@ const lambda = new GraphQLServerLambda({
   }
 });
 
-exports.server = lambda.graphqlHandler;
-exports.playground = lambda.playgroundHandler;
+exports.server = function mainServer(event, context, callback) {
+  if (event.httpMethod === 'GET') {
+    console.log('in get');
+    console.log(event);
+    console.log(context);
+    return lambda.playgroundHandler({ endpoint: '/' })(event, context, callback);
+  }
+
+  console.log('non GET events');
+  console.log(event);
+  event.httpMethod = 'POST';
+
+  return lambda.graphqlHandler(event, context, callback);
+};

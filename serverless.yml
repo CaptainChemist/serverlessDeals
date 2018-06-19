@@ -5,10 +5,11 @@ plugins:
   - serverless-offline
   - serverless-webpack
   - serverless-dynamodb-local
+  - serverless-plugin-tracing
 
 provider:
   name: aws
-  runtime: nodejs6.10
+  runtime: nodejs8.10
   region: us-east-1
   stage: dev
   iamRoleStatements:
@@ -17,6 +18,12 @@ provider:
         - "dynamodb:*"
       Resource:
         - "arn:aws:dynamodb:us-east-1:*"
+    - Effect: "Allow" # xray permissions (required)
+      Action:
+        - "xray:PutTraceSegments"
+        - "xray:PutTelemetryRecords"
+      Resource:
+        - "*"
   environment:
     CONTENT_TABLE: ${self:service}-${self:provider.stage}-content
     AUDIENCE: https://example.execute-api.us-east-1.amazonaws.com/dev/
@@ -32,17 +39,6 @@ resources:
 functions:
   graphql:
     handler: handler.server
-    events:
-    - http:
-        path: /
-        method: post
-        cors: true
-  playground:
-    handler: handler.playground
-    events:
-    - http:
-        path: /
-        method: get
-        cors: true
+
 custom:
   webpackIncludeModules: true
